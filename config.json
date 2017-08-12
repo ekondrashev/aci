@@ -1,0 +1,114 @@
+{
+  "ekondrashev/copypaste-javafx": {
+    "platforms": {
+      "win": [
+        {
+          "address": "win10_en_ci_1",
+          "type": "win10",
+          "credentials": {
+            "user": "ci1",
+            "password": "1234"
+          },
+          "shell": {
+            "command": "C:\\Windows\\System32\\cmd.exe",
+            "arguments": [
+              "/C"
+            ]
+          },
+          "actions": {
+            "skip": ["4"]
+          },
+          "vars": {
+            "cwd": "E:\\"
+          }
+        }
+      ]
+    },
+    "branch": "tom-.*",
+    "cwd": "/tmp/copypaste-javafx/",
+    "secret": "WowAnotherCiApp?",
+    "actions": [
+      {
+        "local": [
+          "mkdir",
+          "-p",
+          "{cwd}"
+        ]
+      },
+      {
+        "local": [
+          "ln",
+          "-f",
+          "-s",
+          "{log}",
+          "/tmp/log.txt"
+        ]
+      },
+      {
+        "local": [
+          "git",
+          "clone",
+          "git@github.com:ekondrashev/copypaste-javafx.git",
+          "{cwd}"
+        ]
+      },
+      {
+        "local": [
+          "git",
+          "--git-dir={cwd}.git",
+          "--work-tree={cwd}",
+          "checkout",
+          "{branch}"
+        ]
+      },
+      {
+        "local": [
+          "scp",
+          "-rp",
+          "{cwd}",
+          "ci1:{cwd}"
+        ]
+      },
+      {
+        "local": [
+          "ssh",
+          "{ci}",
+          "touch /tmp/ci2"
+        ],
+        "comment": "Debug step to verify c   "
+      },
+      {
+        "local": [
+          "{ci}",
+          "/usr/local/bin/mvn -f {cwd}/pom.xml integration-test -PcircleCI"
+        ]
+      },
+      {
+        "local": [
+          "python",
+          "{webhook_home}/report.py",
+          "-p",
+          "{payload}",
+          "-b",
+          "{log}",
+          "-r",
+          "{retcode}"
+        ]
+      },
+      {
+        "local": [
+          "ssh",
+          "{ci}",
+          "rm -rf {cwd}"
+        ]
+      },
+      {
+        "local": [
+          "rm",
+          "-rf",
+          "{cwd}"
+        ]
+      }
+    ]
+  }
+}
