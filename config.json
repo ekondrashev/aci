@@ -16,7 +16,7 @@
             ]
           },
           "actions": {
-            "skip": ["4"]
+            "skip": ["remote_upload", "remote_cleanup"]
           },
           "vars": {
             "cwd": "E:\\"
@@ -27,25 +27,32 @@
     "branch": "tom-.*",
     "cwd": "/tmp/copypaste-javafx/",
     "secret": "WowAnotherCiApp?",
-    "actions": [
+    "commands": [
       {
-        "local": [
+        "id": 0,
+        "location": "local",
+        "command": [
           "mkdir",
           "-p",
           "{cwd}"
         ]
       },
       {
-        "local": [
+        "id": 1,
+        "location": "local",
+        "command": [
           "ln",
           "-f",
           "-s",
           "{log}",
           "/tmp/log.txt"
-        ]
+        ],
+        "comment": "This is to simplify `tails -F /tmp/log.txt` command, since log file is created inside python's tempdir() which is dynamic"
       },
       {
-        "local": [
+        "id": 2,
+        "location": "local",
+        "command": [
           "git",
           "clone",
           "git@github.com:ekondrashev/copypaste-javafx.git",
@@ -53,7 +60,9 @@
         ]
       },
       {
-        "local": [
+        "id": 3,
+        "location": "local",
+        "command": [
           "git",
           "--git-dir={cwd}.git",
           "--work-tree={cwd}",
@@ -62,29 +71,31 @@
         ]
       },
       {
-        "local": [
+        "id": "remote_upload",
+        "location": "local",
+        "command": [
           "scp",
           "-rp",
           "{cwd}",
           "ci1:{cwd}"
-        ]
-      },
-      {
-        "local": [
-          "ssh",
-          "{ci}",
-          "touch /tmp/ci2"
         ],
-        "comment": "Debug step to verify c   "
+        "comment": "Not relevant for windows, should be skipped in specific platform actions overridings"
       },
       {
-        "local": [
-          "{ci}",
-          "/usr/local/bin/mvn -f {cwd}/pom.xml integration-test -PcircleCI"
+        "id": 5,
+        "location": "remote",
+        "command": [
+          "/usr/local/bin/mvn",
+          "-f",
+          "{cwd}/pom.xml",
+          "integration-test",
+          "-PcircleCI"
         ]
       },
       {
-        "local": [
+        "id": 6,
+        "location": "local",
+        "command": [
           "python",
           "{webhook_home}/report.py",
           "-p",
@@ -93,21 +104,25 @@
           "{log}",
           "-r",
           "{retcode}"
-        ]
+        ],
+        "comment": "Send report on the build result"
       },
       {
-        "local": [
-          "ssh",
-          "{ci}",
+        "id": "remote_cleanup",
+        "location": "remote",
+        "command": [
           "rm -rf {cwd}"
         ]
       },
       {
-        "local": [
+        "id": 8,
+        "location": "local",
+        "command": [
           "rm",
           "-rf",
           "{cwd}"
-        ]
+        ],
+        "comment": "Local cleanup"
       }
     ]
   }
